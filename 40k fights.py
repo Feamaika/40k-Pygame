@@ -1335,7 +1335,7 @@ def play_game():
                                     pygame.Color('azure3'), pygame.Color('wheat2')], 1).pop()
 
     pygame.display.set_caption('Warhammer 40k simulator! (Press ESC to quit.)')
-    font_title = pygame.font.Font('40k_resources/OPTIFurst-Bold.otf', 50); font_text = pygame.font.Font('40k_resources/RollboxRegular.ttf', 16)
+    font_title = pygame.font.Font('resources/OPTIFurst-Bold.otf', 50); font_text = pygame.font.Font('resources/RollboxRegular.ttf', 16)
     title_surface = font_title.render('My 40k game', False, 'White')
     text_surface1  = font_text.render('Click the unit you wish to move. Press Enter to end the turn, T to see unit composition,', False, 'White')
     text_surface2  = font_text.render('M to mark move and C to iniate charge.', False, 'White')
