@@ -3,7 +3,7 @@ A simple pygame inspired by the Warhammer 40k tabletop rules I grew up playing, 
 The rules follow the 4^th^ edition ruleset.
 Currently the game opens as a grid with each unit (squad, vehicle or monster) appearing on a single random square. Actions per turn are restriced and reset on a new turn (although currently all units can move in anyone's turn).
 
-![alt text](https://github.com/Feamaika/40k-Pygame/main/40k pygame screenshot.png?raw=true)
+![alt text](https://github.com/Feamaika/40k-Pygame/blob/main/40k_pygame_screenshot.png?raw=true)
 
 ## Installation
 First simply run `pip install -r requirements.txt`, and then run the downloaded script.
