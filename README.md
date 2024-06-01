@@ -1,6 +1,12 @@
 # 40k-Pygame
 A simple pygame inspired by the Warhammer 40k tabletop rules I grew up playing, initially to practice concepts like class inheritance.
+The rules follow the 4^th^ edition ruleset.
+Currently the game opens as a grid with each unit (squad, vehicle or monster) appearing on a single random square. Actions per turn are restriced and reset on a new turn (although currently all units can move in anyone's turn).
 
+![alt text](https://github.com/Feamaika/40k-Pygame/main/40k pygame screenshot.png?raw=true)
+
+## Installation
+First simply run `pip install -r requirements.txt`, and then run the downloaded script.
 
 ## License
 Since this uses trademarked names by Games Workshop, I don't know if I can attach one of the standard licenses to this project. But feel free to try out this code for personal use and write suggestions for future development!
