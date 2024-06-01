@@ -1,23 +1,30 @@
-## Though it'd be cool to make a simple top-down strategy game
-# Currently based on the rules of 4th edition tabletop Warhammer 40k
-
-## Requirements for map (some notes in Dutch)
-# Grid als omgeving
-# afstand tot andere units op grid kunnen berekenen
-# proximiteit, voor charge kunnen uitvoeren
-# stats per units, of beter nog: individuele onderdelen
+### Thought it'd be cool to make a simple top-down strategy game
+#    currently based on the rules of 4th edition tabletop Warhammer 40k
 
 
-#To do: cover en meer special rules meenemen
-#           misschien daar met bonussen op to-hit en to-wound werken i.p.v. abilities?
-#           Wel abilties als re-rolls en power, rending
-#       Kunnen kiezen wélke wapens je vuurt in Shooting Phase
+## First requirements
+# grid for map
+# measure distance to other units on the grid
+# determine proximity, for melee or ranged combat
+# core: stats per unit, but also individual troops and weapon in there
+
+
+## To do: 
+#       include cover and other special rules
+#           abilties like re-rolls en properties like 'rending'
+#           maybe by using bonusses to hit and to wound? possible, but some abilities do more than that
+#       Choosing with weapons to fire in the Shooting Phase
 #       Grenades in Close Combat?
-#       Psychic powers??
+#       Psychic powers?
+#       custom number of units per team/army
+#       track movement of units (per turn)
+#       ...
 
 
 import random, re, numpy as np
-from rolldice import *  #result, explanation = rolldice.roll_dice('12d6 + 10')
+from rolldice import *      #result, explanation = rolldice.roll_dice('12d6 + 10')
+import pygame as pygame, math as math, string   #eztext voor text input?
+
 
 class Game:
     def __init__(self):
@@ -1232,7 +1239,6 @@ SMTC = Troop('Space Marine Terminator Captain', 6,5,4,4,3,5,3,10,'2+/5+',[StormB
 
 SM_squad = Squad('Space Marine Tactical Squad', [SM, SM, SM, SMS])
 SM_squad.add_Troop(SMTC) #SM_squad.add_Troops([SM1, SM1]) #SM_squad.remove_Troop(SM2)
-#SM1.is_wounded() #check maar nog niet automatisch verwijderd......
 SM_squad.composition() #SM_squad.all_fire()
 
 Lasgun = Weapon('lasgun', 24, 3, 9, 'Rapid Fire')
@@ -1280,6 +1286,9 @@ DN = Vehicle('Grey Knight Dreadnought', WS=4, BS=4, S=6, ArmF=12, ArmS=12, ArmR=
 Dae = Troop('Daemonette',4,0,4,3,1,4,2,8,'-/5+', weapons=None) #default of daemonic talons?
 DPD_squad = Squad('Daemonette pack', [Dae, Dae, Dae, Dae, Dae])
 
+
+#Without running the Pygame, you can test the classes and (combat) interactions with the following code:
+
 # game1 = Game(); game1.start(Vindicator, Rhino, SM_squad, TG_squad, SG_squad, HG_squad, OB_squad, 
 #                           Carnifex1, SWSquad, NScythe, DPD_squad, DN)
 
@@ -1297,32 +1306,14 @@ DPD_squad = Squad('Daemonette pack', [Dae, Dae, Dae, Dae, Dae])
 # game1.next_turn()
 # game1.current_turn()
 
-# Vindicator.fire_at(TG_squad)
-# GB_squad.melee(Vindicator)
-# Rhino.move(); OB_squad.fire_at(Rhino)
-# Vindicator.fire_at(NScythe)
-# SWSquad.fire_at(NScythe)
-# NScythe.fire_at(Rhino)
-# Carnifex1.fire_at(SM_squad)
-# DPD_squad.charge_at(SM_squad)
-# DN.fire_at(SG_squad)
-# DN.charge_at(DPD_squad)
 
 
 
 ############ Building the pygame
 
-#To do: achtergrond, ground overlay
-#       custom aantal units per leger
-#       movement vertellen of bijhouden
-
-
-import pygame as pygame, math as math, string   #eztext voor text input?
-
-
 def play_game():
     
-    game = Game(); game.start(Vindicator, SM_squad, SWSquad, TG_squad, HG_squad, Carnifex1)   #eerste 3 units per leger
+    game = Game(); game.start(Vindicator, SM_squad, SWSquad, TG_squad, HG_squad, Carnifex1)   #first: 3 units per army
         
     pygame.init()                                 #start up dat pygame
     clock = pygame.time.Clock()                   #for framerate or something? still not very sure
@@ -1368,7 +1359,7 @@ def play_game():
             self.parent = parent
         #for attr, value in parent.__dict__.items(): # Update the instance with attributes from the parent class
             #    setattr(self, attr, value)
-        #self.__dict__.update(parent.__dict__)    #THIS LINE, I WAS ASKING FOR THIS SIMPLE LINE  
+        #self.__dict__.update(parent.__dict__)    #THIS LINE, I WAS LOOKING A LONG TIME FOR THIS SIMPLE LINE  
         def __getattr__(self, name):
             return getattr(self.parent, name)
             
@@ -1418,7 +1409,6 @@ def play_game():
 
 
     class Map(object):              #The main class; where the action happens
-        #global MapSize
         def __init__(self):
             self.Grid = []  # Initialize the grid
             for Row in range(MapSize):
@@ -1471,13 +1461,6 @@ def play_game():
                     unit = Character(game.groups[s+(half if teamcounter>1 else 0)], RandomColumn, RandomRow)
                     team.append(unit)
 
-            # for team in self.teams.values(): 
-            #     for _ in range(3):  #number of heroes per team
-            #         RandomRow = random.randint(0, MapSize - 1)
-            #         RandomColumn = random.randint(0, MapSize - 1)
-            #         unit = Character("Hero", RandomColumn, RandomRow)
-            #         team.append(unit)
-
             self.current_team = 1  # Starting team
 
         def ask_for_target(self, event):
@@ -1493,8 +1476,8 @@ def play_game():
         
         def update(self):        #Very important function
                                 #This function goes through the entire grid
-                                #And checks to see if any object's internal coordinates
-                                #Disagree with its current position in the grid
+                                #and checks to see if any object's internal coordinates
+                                #disagree with its current position in the grid.
                                 #If they do, it removes the objects and places it 
                                 #on the grid according to its internal coordinates 
             for Column in range(MapSize):   #this makes sure the moving unit doesn't leave a trail ;)
@@ -1539,10 +1522,10 @@ def play_game():
                         Screen.blit(text, text_rect)
 
     Map = Map()
-    selected_unit = None  # Variable to track the selected hero
+    selected_unit = None  # Variable to track the selected unit
     
-    while not Done:     #Main pygame loop
-
+    #Main pygame loop:
+    while not Done:     
         for event in pygame.event.get():         #catching events
             if event.type == pygame.QUIT:
                 Done = True       
