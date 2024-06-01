@@ -861,11 +861,19 @@ class Squad:
                 for troop in self.members:
                     attacks = troop.A+1 if 'charged' in self.actions_done else troop.A
                     for a in range(0, attacks):
-                        troop.melee(target, self) 
+                        if target.size == 0:
+                            print(f"{target.name} has been completely killed in melee.")
+                            break
+                        else:
+                            troop.melee(target, self)  
                         
                     if self.wounding_hits > 0:
                         for h in range(0, self.wounding_hits):
-                            target.saving_throw(weaponAP=self.weaponAP, weaponS=self.weaponS)
+                            if target.size == 0:
+                                print(f"{target.name} has been completely killed in melee.")
+                                break
+                            else:
+                                target.saving_throw(weaponAP=self.weaponAP, weaponS=self.weaponS)
                     if self.glancing_hits > 0:
                         for h in range(0, self.glancing_hits):
                             target.glancing_hit()
@@ -966,6 +974,7 @@ class Troop:
         if weapons:
             for w in self.weapons:
                 if 'melee' in w.Type.casefold():
+                    w.Strength = self.S if w.Strength == 0 else w.Strength
                     self.meleeweapons.append(w)
                     if bool(re.search('power fist', w.Name)) or bool(re.search('power claw', w.Name)) or bool(re.search('power klaw', w.Name)):
                         self.S *= 2
@@ -1005,6 +1014,8 @@ class Troop:
         td = random.randint(1, 6)
         if 'sniper' in weapon.Special.casefold() and td>=4:
             print(f"{self.name} wounds the target.")
+            if unit != None:
+                unit.wounding_hits += 1
         elif td == 1:
             print(f"{self.name} fails to wound target. (■{td})") #return False 
         elif td >= (4+targetT-weapon.Strength):
@@ -1585,8 +1596,8 @@ def play_game():
                 if event.key == pygame.K_RETURN:                                        # Change turn
                     Map.current_team = 2 if Map.current_team == 1 else 1                # Switch to the other team
                     game.next_turn()
-                    print(f"\n\nEnd of turn. It is now the turn for team {string.ascii_uppercase[Map.current_team-1]}.")
-                    selected_unit = None                                                # Deselect the hero
+                    print(f"\nEnd of turn. It is now the turn for team {string.ascii_uppercase[Map.current_team-1]}.\n")
+                    selected_unit = None                                                # Deselect the unit
                 if event.key == pygame.K_c and selected_unit:
                     print("Where do you want to charge?")
                     target_row, target_column = Map.ask_for_target(event)
@@ -1600,7 +1611,7 @@ def play_game():
                     elif selected_unit.ParentClass == 'Vehicle':
                         print(f'The {selected_unit.Name} has {len(selected_unit.parent.members)} passengers')
                 if event.key == pygame.K_LEFT and selected_unit:
-                    selected_unit.Move("LEFT")                          # Move the selected hero
+                    selected_unit.Move("LEFT")                          # Move the selected unit
                 if event.key == pygame.K_RIGHT and selected_unit:
                     selected_unit.Move("RIGHT")
                 if event.key == pygame.K_UP and selected_unit:
@@ -1633,8 +1644,9 @@ def play_game():
         Map.update()
         Map.DrawUnits()
         pygame.display.flip()     #Honestly not sure what this does, but it breaks if I remove it
-        #Volgens ChatGPT: The pygame.display.flip() function is used to update the contents of the entire display. It basically makes the updated frame visible on the screen. So, it's necessary to call pygame.display.flip() after drawing everything to the screen to make the changes visible to the user.
-
+                            #According to ChatGPT: The pygame.display.flip() function is used to update the contents of the entire display. 
+                            #It basically makes the updated frame visible on the screen. So, it's necessary to call pygame.display.flip() after drawing everything to the screen to make the changes visible to the user.
+        pygame.time.delay(100) # Add a short delay to avoid high CPU usage
     pygame.quit()
 
 
